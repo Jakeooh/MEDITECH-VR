@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MEDITECH VR | Final v9</title>
+  <!-- Stable A-Frame 1.4.2 -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <script src="js/logic_v9.js?v=9"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: #000;
+    }
+
+    .a-enter-vr-button {
+      bottom: 30px;
+      left: 30px;
+      background-color: #0ea5e9 !important;
+      /* Medical Primary Blue */
+      border-radius: 50% !important;
+    }
+
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      color: #38bdf8;
+      /* Soft blue text */
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-overlay">
+    <div style="font-size: 24px; letter-spacing: 4px;">MEDITECH v9</div>
+    <div style="margin-top:10px;">LOADING FINAL...</div>
+  </div>
+
+  <a-scene renderer="antialias: true; colorManagement: true;" game-manager-v9 loading-screen="enabled: false">
+
+
+    <a-assets timeout="10000">
+      <video id="webcam" playsinline crossorigin="anonymous"></video>
+      <img id="logo-img" src="assets/logo.png">
+    </a-assets>
+
+    <!-- AR PASSTHROUGH BACKGROUND -->
+    <a-sky src="#webcam" rotation="0 -90 0"></a-sky>
+
+    <a-entity light="type: ambient; color: #ffffff; intensity: 1.2"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 1.5" position="-2 4 2"></a-entity>
+
+    <!-- PLAYER RIG -->
+    <a-entity id="rig" position="0 0 0">
+      <a-entity camera look-controls position="0 1.6 0">
+        <!-- GAZE CURSOR FIXED: Raycaster targets .clickable objects -->
+        <a-entity cursor="fuse: true; fuseTimeout: 1000" raycaster="objects: .clickable; far: 10; interval: 100"
+          position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.04"
+          material="color: #000; shader: flat; opacity: 0.8">
+          <a-entity geometry="primitive: circle; radius: 0.01" material="color: #fff; shader: flat"
+            position="0 0 -0.001"></a-entity>
+          <a-entity geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.04"
+            material="color: #38bdf8; shader: flat; opacity: 1"
+            animation__fusing="property: scale; to: 0.1 0.1 0.1; dur: 1000; startEvents: fusing; easing: easeInCubic"
+            animation__reset="property: scale; to: 1 1 1; dur: 100; startEvents: mouseleave">
+          </a-entity>
+        </a-entity>
+
+        <a-text id="hud-text" value="WAITING..." align="center" width="1" position="0 -0.5 -1" color="#fff"
+          font="kelsong"></a-text>
+        <a-text id="mic-status" value="" align="center" width="1.5" position="0 0.5 -1" color="#10b981"
+          font="exo2bold"></a-text>
+
+      </a-entity>
+    </a-entity>
+
+    <!-- MAIN MENU -->
+    <a-entity id="mainMenu" position="0 1.6 -2.5">
+      <!-- Background Panel for Visibility -->
+      <a-plane width="3.5" height="3" color="#0f172a" opacity="0.85" position="0 0 -0.01"></a-plane>
+
+      <!-- TITLE -->
+      <a-text value="MEDITECH VR" color="#38bdf8" position="0 1.05 0" align="center" width="8" font="exo2bold"></a-text>
+
+      <!-- MENU OPTIONS -->
+      <a-entity class="clickable" geometry="primitive: plane; width: 2.2; height: 0.4"
+        material="color: #1e293b; opacity: 0.9" position="0 0.55 0" v9-interact="action: showExam">
+        <a-text value="EXAMINE ORGANS" align="center" position="0 0 0.01" width="4" color="#f8fafc"></a-text>
+        <a-entity geometry="primitive: box; width: 2.2; height: 0.02; depth: 0.02" material="color: #0ea5e9"
+          position="0 -0.2 0"></a-entity>
+        <a-text class="voice-label" value="" align="center" position="-1.5 0 0.02" width="6" color="#fef08a"
+          font="exo2bold"></a-text>
+      </a-entity>
+
+      <a-entity class="clickable" geometry="primitive: plane; width: 2.2; height: 0.4"
+        material="color: #1e293b; opacity: 0.9" position="0 0.05 0" v9-interact="action: showQuiz">
+        <a-text value="DIAGNOSTIC QUIZ" align="center" position="0 0 0.01" width="4" color="#f8fafc"></a-text>
+        <a-entity geometry="primitive: box; width: 2.2; height: 0.02; depth: 0.02" material="color: #0ea5e9"
+          position="0 -0.2 0"></a-entity>
+        <a-text class="voice-label" value="" align="center" position="-1.5 0 0.02" width="6" color="#fef08a"
+          font="exo2bold"></a-text>
+      </a-entity>
+
+      <a-entity class="clickable" geometry="primitive: plane; width: 2.2; height: 0.4"
+        material="color: #1e293b; opacity: 0.9" position="0 -0.45 0" v9-interact="action: showControls">
+        <a-text value="CONTROLS" align="center" position="0 0 0.01" width="4" color="#f8fafc"></a-text>
+        <a-entity geometry="primitive: box; width: 2.2; height: 0.02; depth: 0.02" material="color: #0ea5e9"
+          position="0 -0.2 0"></a-entity>
+        <a-text class="voice-label" value="" align="center" position="-1.5 0 0.02" width="6" color="#fef08a"
+          font="exo2bold"></a-text>
+      </a-entity>
+
+      <a-entity class="clickable" geometry="primitive: plane; width: 2.2; height: 0.4"
+        material="color: #1e293b; opacity: 0.9" position="0 -0.95 0" v9-interact="action: showCredits">
+        <a-text value="PROJECT INFO" align="center" position="0 0 0.01" width="4" color="#f8fafc"></a-text>
+        <a-entity geometry="primitive: box; width: 2.2; height: 0.02; depth: 0.02" material="color: #0ea5e9"
+          position="0 -0.2 0"></a-entity>
+        <a-text class="voice-label" value="" align="center" position="-1.5 0 0.02" width="6" color="#fef08a"
+          font="exo2bold"></a-text>
+      </a-entity>
+
+      <a-entity class="clickable" geometry="primitive: plane; width: 2.2; height: 0.4"
+        material="color: #047857; opacity: 0.9" position="0 -1.45 0" v9-interact="action: showAI">
+        <a-text value="AI ASSISTANT" align="center" position="0 0 0.01" width="4" color="#f8fafc"
+          font="exo2bold"></a-text>
+        <a-entity geometry="primitive: box; width: 2.2; height: 0.02; depth: 0.02" material="color: #10b981"
+          position="0 -0.2 0"></a-entity>
+        <a-text class="voice-label" value="" align="center" position="-1.5 0 0.02" width="6" color="#fef08a"
+          font="exo2bold"></a-text>
+      </a-entity>
+
+    </a-entity>
+
+    <!-- AI ASSISTANT ROOM -->
+    <a-entity id="aiRoom" visible="false" position="0 -100 0">
+      <a-plane width="6" height="4" color="#0f172a" opacity="0.9" position="0 1.6 -3"></a-plane>
+      <a-entity position="0 1.6 -2.9">
+        <a-text value="MEDICAL AI ASSISTANT" align="center" width="6" position="0 1.6 0" color="#10b981"
+          font="exo2bold"></a-text>
+
+        <!-- Animated visualizer -->
+        <a-entity geometry="primitive: sphere; radius: 0.15" material="color: #047857; wireframe: true" position="0 1 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"></a-entity>
+
+        <a-text id="aiQuery" value="Say a medical term out loud..." align="center" width="4" position="0 0.5 0"
+          color="#fef08a"></a-text>
+        <a-text id="aiResponse" value="" align="center" width="3.5" position="0 -0.3 0" color="#f8fafc"
+          lineHeight="45"></a-text>
+
+        <!-- BACK BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 1.5; height: 0.35; depth: 0.05"
+          material="color: #0284c7" position="0 -1.6 0" v9-interact="action: showMenu">
+          <a-text value="BACK TO MENU" align="center" position="0 0 0.03" width="3.5" color="#fff"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-1.2 0 0.04" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- INFO / CREDITS ROOM -->
+    <a-entity id="creditsRoom" visible="false" position="0 -100 0">
+      <a-plane width="6" height="4" color="#0f172a" opacity="0.9" position="0 1.6 -2.8"></a-plane>
+      <a-entity position="0 1.6 -2.7">
+
+        <!-- TITLE -->
+        <a-text value="MEDITECH VR ENGINE v2" align="center" width="5.5" position="0 1.7 0" color="#38bdf8"
+          font="exo2bold"></a-text>
+
+        <!-- ABOUT THE PROJECT -->
+        <a-text value="ABOUT THE PLATFORM" align="center" width="3" position="0 1.3 0" color="#94a3b8"></a-text>
+        <a-text
+          value="A Web-based Virtual Reality platform designed to revolutionize\nmedical education by providing immersive, interactive 3D\nvisualizations of human anatomy directly within the browser."
+          align="center" width="3.5" position="0 0.85 0" color="#f8fafc" lineHeight="50"></a-text>
+
+        <!-- TECH STACK -->
+        <a-text value="POWERED BY" align="center" width="3" position="0 0.3 0" color="#94a3b8"></a-text>
+        <a-text value="A-Frame (WebVR API) \n Three.js Data Models \n Secure Local HTTPS Server" align="center"
+          width="3.5" position="0 -0.05 0" color="#f8fafc" lineHeight="50"></a-text>
+
+        <!-- TEAM -->
+        <a-text value="DEVELOPED BY" align="center" width="3" position="0 -0.55 0" color="#94a3b8"></a-text>
+        <a-text value="Aman | Anfy | Emmanuel | Jacob" align="center" width="4.5" position="0 -0.8 0" color="#0ea5e9"
+          font="exo2bold"></a-text>
+
+        <a-text value="B.Tech IT 3rd Year Mini Project \n Viswajyothi College of Engineering and Technology"
+          align="center" width="2.5" position="0 -1.15 0" color="#64748b" lineHeight="45"></a-text>
+
+        <!-- BACK BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 1.5; height: 0.35; depth: 0.05"
+          material="color: #0284c7" position="0 -1.65 0" v9-interact="action: showMenu">
+          <a-text value="BACK TO MENU" align="center" position="0 0 0.03" width="3.5" color="#fff"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-1.2 0 0.04" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- CONTROLS ROOM -->
+    <a-entity id="controlsRoom" visible="false" position="0 -100 0">
+      <a-plane width="4.5" height="3.5" color="#0f172a" opacity="0.9" position="0 1.6 -3"></a-plane>
+      <a-entity position="0 1.6 -2.9">
+        <a-text value="CONTROL SETTINGS" align="center" width="5.5" position="0 1.2 0" color="#38bdf8"
+          font="exo2bold"></a-text>
+
+        <!-- GAZE BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 2.5; height: 0.5; depth: 0.1"
+          material="color: #1e293b" position="0 0.5 0" v9-interact="action: setControlMode; arg: gaze">
+          <a-text value="GAZE CONTROL" align="center" position="0 0 0.06" width="4.5" color="#f8fafc"></a-text>
+          <a-text id="gazeStatus" value="[ ACTIVE ]" align="center" position="0 -0.15 0.06" width="3"
+            color="#10b981"></a-text>
+          <a-box width="2.5" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.25 0"></a-box>
+          <a-text class="voice-label" value="" align="center" position="-1.7 0 0.06" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <!-- VOICE BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 2.5; height: 0.5; depth: 0.1"
+          material="color: #1e293b" position="0 -0.2 0" v9-interact="action: setControlMode; arg: voice">
+          <a-text value="VOICE CONTROL" align="center" position="0 0 0.06" width="4.5" color="#f8fafc"></a-text>
+          <a-text id="voiceStatus" value="" align="center" position="0 -0.15 0.06" width="3" color="#10b981"></a-text>
+          <a-box width="2.5" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.25 0"></a-box>
+          <a-text class="voice-label" value="" align="center" position="-1.7 0 0.06" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <!-- BACK BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 1.5; height: 0.35; depth: 0.05"
+          material="color: #0284c7" position="0 -1 0" v9-interact="action: showMenu">
+          <a-text value="BACK TO MENU" align="center" position="0 0 0.03" width="3.5" color="#fff"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-1.2 0 0.04" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+
+    <!-- ORGAN SELECTION -->
+    <a-entity id="examRoom" visible="false" position="0 -100 0">
+      <a-plane width="4.5" height="3" color="#0f172a" opacity="0.85" position="0 2 -4.1"></a-plane>
+      <a-text value="SELECT SPECIMEN" color="#38bdf8" position="0 3.2 -4" align="center" width="6"
+        font="exo2bold"></a-text>
+
+      <a-entity position="0 2 -4">
+        <!-- Row 1 -->
+        <a-entity position="0 0.8 0">
+          <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.4; depth: 0.1"
+            material="color: #1e293b" position="-1.6 0 0" v9-interact="action: selectOrgan; arg: brain">
+            <a-text value="BRAIN" align="center" position="0 0 0.06" width="3.5" color="#f8fafc"></a-text>
+            <a-box width="1.4" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.2 0"></a-box>
+            <a-text class="voice-label" value="" align="center" position="-1.15 0 0.06" width="6" color="#fef08a"
+              font="exo2bold"></a-text>
+          </a-entity>
+          <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.4; depth: 0.1"
+            material="color: #1e293b" position="0 0 0" v9-interact="action: selectOrgan; arg: heart">
+            <a-text value="HEART" align="center" position="0 0 0.06" width="3.5" color="#f8fafc"></a-text>
+            <a-box width="1.4" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.2 0"></a-box>
+            <a-text class="voice-label" value="" align="center" position="-1.15 0 0.06" width="6" color="#fef08a"
+              font="exo2bold"></a-text>
+          </a-entity>
+          <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.4; depth: 0.1"
+            material="color: #1e293b" position="1.6 0 0" v9-interact="action: selectOrgan; arg: kidney">
+            <a-text value="KIDNEY" align="center" position="0 0 0.06" width="3.5" color="#f8fafc"></a-text>
+            <a-box width="1.4" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.2 0"></a-box>
+            <a-text class="voice-label" value="" align="center" position="-1.15 0 0.06" width="6" color="#fef08a"
+              font="exo2bold"></a-text>
+          </a-entity>
+        </a-entity>
+        <!-- Row 2 -->
+        <a-entity position="0 0.2 0">
+          <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.4; depth: 0.1"
+            material="color: #1e293b" position="-1.6 0 0" v9-interact="action: selectOrgan; arg: lungs">
+            <a-text value="LUNGS" align="center" position="0 0 0.06" width="3.5" color="#f8fafc"></a-text>
+            <a-box width="1.4" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.2 0"></a-box>
+            <a-text class="voice-label" value="" align="center" position="-1.15 0 0.06" width="6" color="#fef08a"
+              font="exo2bold"></a-text>
+          </a-entity>
+          <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.4; depth: 0.1"
+            material="color: #1e293b" position="0 0 0" v9-interact="action: selectOrgan; arg: stomach">
+            <a-text value="STOMACH" align="center" position="0 0 0.06" width="3.5" color="#f8fafc"></a-text>
+            <a-box width="1.4" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.2 0"></a-box>
+            <a-text class="voice-label" value="" align="center" position="-1.15 0 0.06" width="6" color="#fef08a"
+              font="exo2bold"></a-text>
+          </a-entity>
+          <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.4; depth: 0.1"
+            material="color: #1e293b" position="1.6 0 0" v9-interact="action: selectOrgan; arg: skeleton">
+            <a-text value="SKELETON" align="center" position="0 0 0.06" width="3.5" color="#f8fafc"></a-text>
+            <a-box width="1.4" height="0.02" depth="0.1" color="#0ea5e9" position="0 -0.2 0"></a-box>
+            <a-text class="voice-label" value="" align="center" position="-1.15 0 0.06" width="6" color="#fef08a"
+              font="exo2bold"></a-text>
+          </a-entity>
+        </a-entity>
+
+        <!-- BACK BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 1.5; height: 0.4; depth: 0.05"
+          material="color: #0284c7" position="0 -0.6 0" v9-interact="action: showMenu">
+          <a-text value="HOME" align="center" position="0 0 0.03" width="4" color="#fff"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-1.3 0 0.04" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- ORGAN VIEWPORT (NO JAR) -->
+    <a-entity id="organView" visible="false" position="0 -100 0">
+      <!-- MODEL STAGE -->
+      <a-entity id="modelStage" position="0 1.3 -4.5">
+        <a-entity id="displayModel" v9-auto-rotate></a-entity>
+      </a-entity>
+
+      <!-- VR UI ELEMENTS -->
+      <a-entity id="vrUI">
+        <a-text id="organTitle" value="ANALYZING..." color="#38bdf8" position="0 3 -3.5" align="center"
+          width="7"></a-text>
+
+        <!-- ROTATION UI -->
+        <a-entity class="clickable" position="-1.5 1.5 -2.5" v9-rotate="dir: -1"
+          geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.1" material="color: #1e293b; opacity: 0.9">
+          <a-text value="<<" align="center" position="0 0 0.06" color="#38bdf8" width="10"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-0.3 0 0.07" width="5" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+        <a-entity class="clickable" position="1.5 1.5 -2.5" v9-rotate="dir: 1"
+          geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.1" material="color: #1e293b; opacity: 0.9">
+          <a-text value=">>" align="center" position="0 0 0.06" color="#38bdf8" width="10"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-0.3 0 0.07" width="5" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <!-- ZOOM UI -->
+        <a-entity class="clickable" position="-1.5 0.5 -2.5" v9-continuous-zoom="dir: out"
+          geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.1" material="color: #1e293b; opacity: 0.9">
+          <a-text value="-" align="center" position="0 0 0.06" color="#f43f5e" width="20"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-0.3 0 0.07" width="5" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+        <a-entity class="clickable" position="1.5 0.5 -2.5" v9-continuous-zoom="dir: in"
+          geometry="primitive: box; width: 0.3; height: 0.3; depth: 0.1" material="color: #1e293b; opacity: 0.9">
+          <a-text value="+" align="center" position="0 0 0.06" color="#10b981" width="15"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-0.3 0 0.07" width="5" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <!-- GIANT VISIBLE BACK SWITCH -->
+        <a-entity class="clickable" id="backSwitch" geometry="primitive: box; width: 1.5; height: 0.45; depth: 0.1"
+          material="color: #0284c7" position="0 0.5 -2.5" v9-interact="action: showExam">
+          <a-text value="BACK" align="center" position="0 0 0.06" width="4" color="#fff" font="exo2bold"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-1.1 0 0.07" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <!-- INFO BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 1.5; height: 0.45; depth: 0.1"
+          material="color: #059669" position="0 -0.1 -2.5" v9-interact="action: showInfo">
+          <a-text value="INFO" align="center" position="0 0 0.06" width="4" color="#fff" font="exo2bold"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-1.1 0 0.07" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+    </a-entity>
+
+    <!-- ORGAN INFO ROOM -->
+    <a-entity id="infoRoom" visible="false" position="0 -100 0">
+      <a-plane width="6" height="5" color="#0f172a" opacity="0.95" position="0 1.6 -3"></a-plane>
+      <a-entity position="0 1.6 -2.9">
+        <a-text id="infoTitle" value="ORGAN NAME" align="center" width="6" position="0 2.1 0" color="#38bdf8"
+          font="exo2bold"></a-text>
+
+        <!-- DIAGRAM IMAGE -->
+        <a-image id="infoDiagram" src="" width="3" height="2" position="0 0.8 0"></a-image>
+
+        <a-text id="infoDesc" value="Loading information..." align="center" width="3.5" position="0 -0.8 0"
+          color="#f8fafc" lineHeight="45"></a-text>
+
+        <!-- BACK BUTTON -->
+        <a-entity class="clickable" geometry="primitive: box; width: 1.5; height: 0.35; depth: 0.05"
+          material="color: #0284c7" position="0 -2.1 0" v9-interact="action: hideInfo">
+          <a-text value="BACK TO MODEL" align="center" position="0 0 0.03" width="3.5" color="#fff"></a-text>
+          <a-text class="voice-label" value="" align="center" position="-1.3 0 0.04" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- QUIZ ROOM -->
+    <a-entity id="quizRoom" visible="false" position="0 -100 0">
+      <a-plane width="4.5" height="3" color="#0f172a" opacity="0.85" position="0 1.6 -4.1"></a-plane>
+
+      <a-text id="quizQ" value="Q" color="#f8fafc" position="0 3.2 -4" align="center" width="7"></a-text>
+      <a-text id="quizS" value="SCORE: 0" color="#10b981" position="0 3.6 -4" align="center" width="3.5"
+        font="exo2bold"></a-text>
+
+      <a-entity position="0 1.6 -4">
+        <a-entity id="btn0" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #1e293b" position="-1.4 0.5 0" v9-interact="action: submitAnswer; arg: 0">
+          <a-text value="A" align="center" position="0 0 0.06" width="4" color="#f8fafc"></a-text>
+          <a-box width="2.4" height="0.02" depth="0.1" color="#94a3b8" position="0 -0.25 0"></a-box>
+          <a-text class="voice-label" value="" align="center" position="-1.5 0 0.06" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <a-entity id="btn1" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #1e293b" position="1.4 0.5 0" v9-interact="action: submitAnswer; arg: 1">
+          <a-text value="B" align="center" position="0 0 0.06" width="4" color="#f8fafc"></a-text>
+          <a-box width="2.4" height="0.02" depth="0.1" color="#94a3b8" position="0 -0.25 0"></a-box>
+          <a-text class="voice-label" value="" align="center" position="-1.5 0 0.06" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <a-entity id="btn2" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #1e293b" position="-1.4 -0.2 0" v9-interact="action: submitAnswer; arg: 2">
+          <a-text value="C" align="center" position="0 0 0.06" width="4" color="#f8fafc"></a-text>
+          <a-box width="2.4" height="0.02" depth="0.1" color="#94a3b8" position="0 -0.25 0"></a-box>
+          <a-text class="voice-label" value="" align="center" position="-1.5 0 0.06" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+
+        <a-entity id="btn3" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #1e293b" position="1.4 -0.2 0" v9-interact="action: submitAnswer; arg: 3">
+          <a-text value="D" align="center" position="0 0 0.06" width="4" color="#f8fafc"></a-text>
+          <a-box width="2.4" height="0.02" depth="0.1" color="#94a3b8" position="0 -0.25 0"></a-box>
+          <a-text class="voice-label" value="" align="center" position="-1.5 0 0.06" width="6" color="#fef08a"
+            font="exo2bold"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- HOME BUTTON FOR QUIZ -->
+      <a-entity class="clickable" geometry="primitive: box; width: 1.5; height: 0.4; depth: 0.05"
+        material="color: #0284c7" position="0 0.5 -4" v9-interact="action: showMenu">
+        <a-text value="HOME" align="center" position="0 0 0.03" width="4" color="#fff"></a-text>
+        <a-text class="voice-label" value="" align="center" position="-1.1 0 0.04" width="6" color="#fef08a"
+          font="exo2bold"></a-text>
+      </a-entity>
+    </a-entity>
+
+
+
+  </a-scene>
+</body>
+
+</html>

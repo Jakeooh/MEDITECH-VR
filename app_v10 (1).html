@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MEDITECH VR | FORCE v10</title>
+  <!-- Stable A-Frame 1.4.2 -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <script src="js/logic_v10.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: #000;
+    }
+
+    .a-enter-vr-button {
+      bottom: 30px;
+      left: 30px;
+      background-color: #ff0055 !important;
+      border-radius: 50% !important;
+    }
+
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      color: #00f5ff;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-overlay">
+    <div style="font-size: 24px; letter-spacing: 4px;">MEDITECH v10</div>
+    <div style="margin-top:10px;">LOADING... (NO CACHE)</div>
+  </div>
+
+  <a-scene renderer="antialias: true; colorManagement: true;" game-manager-v10 loading-screen="enabled: false">
+
+    <a-assets timeout="10000">
+      <a-asset-item id="brain-v9" src="assets/v6/models/brain.glb"></a-asset-item>
+      <a-asset-item id="heart-v9" src="assets/v6/models/heart.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- NO ENVIRONMENT PRESET - JUST DARKNESS -->
+    <a-sky color="#050505"></a-sky>
+
+    <!-- 4X INTENSITY LIGHTING RIG -->
+    <a-entity light="type: ambient; color: #ffffff; intensity: 1.5"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 2.0" position="-2 5 2"></a-entity>
+    <a-entity light="type: point; color: #ffffff; intensity: 1.5" position="0 2 -2"></a-entity>
+    <a-entity light="type: point; color: #00f5ff; intensity: 1.0" position="0 1 -4"></a-entity>
+
+    <!-- PLAYER RIG -->
+    <a-entity id="rig" position="0 0 0">
+      <a-entity camera look-controls position="0 1.6 0">
+        <!-- MASSIVE VISIBLE CURSOR (RED FOR MAX CONTRAST) -->
+        <a-entity cursor="fuse: true; fuseTimeout: 1200" position="0 0 -1"
+          geometry="primitive: ring; radiusInner: 0.03; radiusOuter: 0.05"
+          material="color: #ff0055; shader: flat; opacity: 1"
+          animation__fusing="property: scale; to: 0.1 0.1 0.1; dur: 1200; startEvents: fusing">
+        </a-entity>
+        <!-- HUD TEXT -->
+        <a-text id="hud-text" value="WAITING..." align="center" width="1.5" position="0 -0.6 -1.2" color="#00f5ff"
+          font="exo2bold"></a-text>
+      </a-entity>
+    </a-entity>
+
+    <!-- PERMANENT HOME SWITCH (Red Sphere) -->
+    <a-entity class="clickable" id="homeSwitch" position="1.5 1.2 -1.5" v10-interact="action: showMenu">
+      <a-sphere radius="0.15" color="#ff0055" opacity="1"></a-sphere>
+      <a-text value="HOME" position="0 -0.25 0" align="center" width="3" color="#ff0055"></a-text>
+    </a-entity>
+
+    <!-- NO JARS - PURE RENDER STAGE -->
+    <a-entity id="modelStage" position="0 1.5 -3" v10-auto-rotate>
+      <a-entity id="displayModel" crossorigin="anonymous"></a-entity>
+    </a-entity>
+
+    <!-- MAIN MENU -->
+    <a-entity id="mainMenu" position="0 1.6 -2.5">
+      <a-text value="MEDITECH v10 (NO CACHE)" color="#fff" position="0 1.4 0" align="center" width="8"></a-text>
+
+      <a-entity class="clickable" geometry="primitive: box; width: 2; height: 0.5; depth: 0.1" material="color: #111"
+        position="0 0.8 0" v10-interact="action: showExam">
+        <a-text value="EXAMINE ORGANS" align="center" position="0 0 0.06" width="5"></a-text>
+        <a-entity geometry="primitive: box; width: 2.05; height: 0.55; depth: 0.05" material="color: #00f5ff"
+          position="0 0 -0.05"></a-entity>
+      </a-entity>
+
+      <a-entity class="clickable" geometry="primitive: box; width: 2; height: 0.5; depth: 0.1" material="color: #111"
+        position="0 0.1 0" v10-interact="action: showQuiz">
+        <a-text value="DIAGNOSTIC QUIZ" align="center" position="0 0 0.06" width="5"></a-text>
+        <a-entity geometry="primitive: box; width: 2.05; height: 0.55; depth: 0.05" material="color: #00f5ff"
+          position="0 0 -0.05"></a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- ORGAN SELECTION -->
+    <a-entity id="examRoom" visible="false" position="0 -100 0">
+      <a-text value="SELECT SPECIMEN" color="#00f5ff" position="0 3.2 -4" align="center" width="6"></a-text>
+
+      <a-entity position="0 2 -4">
+        <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.5; depth: 0.1"
+          material="color: #111" position="-1 0.3 0" v10-interact="action: selectOrgan; arg: brain">
+          <a-text value="HUMAN BRAIN" align="center" position="0 0 0.06" width="4"></a-text>
+        </a-entity>
+        <a-entity class="clickable" geometry="primitive: box; width: 1.4; height: 0.5; depth: 0.1"
+          material="color: #111" position="1 0.3 0" v10-interact="action: selectOrgan; arg: heart">
+          <a-text value="HUMAN HEART" align="center" position="0 0 0.06" width="4"></a-text>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- ORGAN VIEWPORT (NO JAR) -->
+    <a-entity id="organView" visible="false" position="0 -100 0">
+      <a-text id="organTitle" value="ANALYZING..." color="#00f5ff" position="0 3 -3.5" align="center"
+        width="7"></a-text>
+
+      <!-- ROTATION UI -->
+      <a-entity class="clickable" position="-1.8 1.5 -2.5" v10-rotate="dir: -1">
+        <a-box width="0.3" height="0.3" depth="0.1" color="#ff0055" opacity="0.5"></a-box>
+        <a-text value="<<" align="center" position="0 0 0.06" color="#fff"></a-text>
+      </a-entity>
+      <a-entity class="clickable" position="1.8 1.5 -2.5" v10-rotate="dir: 1">
+        <a-box width="0.3" height="0.3" depth="0.1" color="#ff0055" opacity="0.5"></a-box>
+        <a-text value=">>" align="center" position="0 0 0.06" color="#fff"></a-text>
+      </a-entity>
+
+      <!-- GIANT VISIBLE BACK SWITCH -->
+      <a-entity class="clickable" id="backSwitch" geometry="primitive: box; width: 1.5; height: 0.45; depth: 0.1"
+        material="color: #ff0055" position="0 0.35 -2.5" v10-interact="action: showExam">
+        <a-text value="BACK" align="center" position="0 0 0.06" width="4" color="#fff" font="exo2bold"></a-text>
+      </a-entity>
+    </a-entity>
+
+    <!-- QUIZ ROOM -->
+    <a-entity id="quizRoom" visible="false" position="0 -100 0">
+      <a-text id="quizQ" value="Q" color="#fff" position="0 3.2 -4" align="center" width="7"></a-text>
+      <a-text id="quizS" value="SCORE: 0" color="#ff0055" position="0 3.6 -4" align="center" width="3"></a-text>
+
+      <a-entity position="0 1.6 -4">
+        <a-entity id="btn0" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #111" position="-1.4 0.5 0" v10-interact="action: submitAnswer; arg: 0"><a-text value="A"
+            align="center" position="0 0 0.06" width="4"></a-text></a-entity>
+        <a-entity id="btn1" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #111" position="1.4 0.5 0" v10-interact="action: submitAnswer; arg: 1"><a-text value="B"
+            align="center" position="0 0 0.06" width="4"></a-text></a-entity>
+        <a-entity id="btn2" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #111" position="-1.4 -0.2 0" v10-interact="action: submitAnswer; arg: 2"><a-text value="C"
+            align="center" position="0 0 0.06" width="4"></a-text></a-entity>
+        <a-entity id="btn3" class="clickable" geometry="primitive: box; width: 2.4; height: 0.5; depth: 0.1"
+          material="color: #111" position="1.4 -0.2 0" v10-interact="action: submitAnswer; arg: 3"><a-text value="D"
+            align="center" position="0 0 0.06" width="4"></a-text></a-entity>
+      </a-entity>
+    </a-entity>
+
+  </a-scene>
+</body>
+
+</html>
